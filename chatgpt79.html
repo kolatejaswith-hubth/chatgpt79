@@ -1,0 +1,199 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campus Info Chatbot</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f7fc;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background-color: #004080;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    font-size: 1.5rem;
+  }
+  #chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    margin: 1rem auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  #chat-window {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .message {
+    max-width: 75%;
+    margin-bottom: 1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    line-height: 1.3;
+  }
+  .user-msg {
+    background: #0078d7;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+  .bot-msg {
+    background: #e2e8f0;
+    color: #333;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+  #input-area {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+  #input-area input {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    font-size: 1rem;
+  }
+  #input-area button {
+    background-color: #004080;
+    border: none;
+    color: white;
+    padding: 0 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+  #input-area button:hover {
+    background-color: #002950;
+  }
+  #chat-window::-webkit-scrollbar {
+    width: 8px;
+  }
+  #chat-window::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>Campus Info Chatbot</header>
+
+<div id="chat-container">
+  <div id="chat-window">
+    <div class="bot-msg message">
+      Hello! I'm your Campus Info Bot. Ask me about schedules, facilities, dining, library, or admin procedures.
+    </div>
+  </div>
+  <form id="input-area">
+    <input type="text" id="user-input" placeholder="Type your question here..." autocomplete="off" required />
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+  // Simulated campus info database
+  const campusData = {
+    schedules: {
+      "class schedule": "Classes run Monday to Friday, 8am to 5pm. Check your department for specific timings.",
+      "exam schedule": "Final exams are scheduled for December 10-20. Midterms vary by course.",
+      "holiday schedule": "Campus holidays include national holidays and semester breaks."
+    },
+    facilities: {
+      "gym": "The campus gym is open from 6am to 10pm daily. Membership is free for students.",
+      "parking": "Parking is available at Lot A, B, and C. Student permits are required.",
+      "auditorium": "The main auditorium hosts events and lectures. Booking through admin is required."
+    },
+    dining: {
+      "cafeteria": "Main cafeteria serves breakfast 7am-10am, lunch 11am-2pm, dinner 5pm-8pm.",
+      "food court": "The food court has 5 vendors offering various cuisines, open 10am-8pm.",
+      "vending machines": "Located near dorms and library, available 24/7."
+    },
+    library: {
+      "opening hours": "Library is open Monday-Saturday, 8am to 9pm; closed on Sundays.",
+      "book borrowing": "Students can borrow up to 5 books for 2 weeks with renewal options.",
+      "study rooms": "Group study rooms can be booked online via the library portal."
+    },
+    administrative: {
+      "registration": "Course registration opens two weeks before semester start via the student portal.",
+      "transcripts": "Request transcripts at the admin office or online. Processing takes 3-5 days.",
+      "financial aid": "Apply for financial aid through the financial office; deadlines vary."
+    }
+  };
+
+  // Basic keyword mapping for categories
+  const keywords = {
+    schedules: ["schedule", "class", "exam", "holiday"],
+    facilities: ["gym", "parking", "auditorium", "facility", "facilities"],
+    dining: ["cafeteria", "dining", "food", "vending"],
+    library: ["library", "book", "study", "borrow"],
+    administrative: ["registration", "transcript", "financial aid", "admin", "administrative"]
+  };
+
+  const chatWindow = document.getElementById('chat-window');
+  const userInput = document.getElementById('user-input');
+  const form = document.getElementById('input-area');
+
+  // Function to add message to chat window
+  function addMessage(text, sender='bot') {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message');
+    msgDiv.classList.add(sender === 'user' ? 'user-msg' : 'bot-msg');
+    msgDiv.textContent = text;
+    chatWindow.appendChild(msgDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  // Simple AI response function
+  function getBotResponse(input) {
+    input = input.toLowerCase();
+
+    // Check for category based on keywords
+    for (const [category, keys] of Object.entries(keywords)) {
+      for (const key of keys) {
+        if (input.includes(key)) {
+          // Find matching entry in category data
+          for (const [topic, response] of Object.entries(campusData[category])) {
+            if (input.includes(topic)) {
+              return response;
+            }
+          }
+          // If no specific topic matched, return general info
+          const allResponses = Object.values(campusData[category]);
+          return allResponses[0] || "Sorry, I couldn't find info on that.";
+        }
+      }
+    }
+
+    // If no category matched
+    return "Sorry, I didn't understand that. You can ask me about schedules, facilities, dining, library services, or admin procedures.";
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const inputText = userInput.value.trim();
+    if (!inputText) return;
+
+    addMessage(inputText, 'user');
+    userInput.value = '';
+
+    setTimeout(() => {
+      const botReply = getBotResponse(inputText);
+      addMessage(botReply, 'bot');
+    }, 500);
+  });
+</script>
+
+</body>
+</html>
